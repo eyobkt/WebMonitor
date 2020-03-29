@@ -48,6 +48,7 @@ public class MonitoringRound implements Runnable {
       mm.setRecipients(Message.RecipientType.TO, email);
       mm.setSubject("There has been an update to an API endpoint you are monitoring");
       mm.setText("There has been a change to the resource at " + url);
+      
       Transport.send(mm);
     } catch (NamingException | MessagingException e) {
       e.printStackTrace();
