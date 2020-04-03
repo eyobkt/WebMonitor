@@ -3,6 +3,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -14,19 +15,19 @@ import javax.naming.NamingException;
 
 public class MonitoringRound implements Runnable {  
   public void run() {    
-    DataAccessObject dataAccessObject = new DataAccessObject();    
+    MonitorDao monitorDao = new MonitorDaoImpl();    
     try {      
-      ResultSet resultSet = dataAccessObject.selectAllMonitors();  
+      ResultSet resultSet = monitorDao.selectAllMonitors();  
       while (resultSet.next()) {        
         URL url = new URL(resultSet.getString("url"));
         String email = resultSet.getString("email");
         long lastContentLength = resultSet.getLong("last_content_length");
         
-        HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+        HttpURLConnection uc = (HttpURLConnection) url.openConnection();
         
-        long contentLength = huc.getContentLengthLong();
+        long contentLength = uc.getContentLengthLong();
         if (contentLength != lastContentLength) {
-          dataAccessObject.updateLastContentLength(contentLength);          
+          monitorDao.updateMonitor(contentLength, null);          
           sendEmail(url.toString(), email);
           return;
         }           
@@ -34,7 +35,7 @@ public class MonitoringRound implements Runnable {
     } catch (SQLException | IOException e) {
       e.printStackTrace();
     } finally {
-      dataAccessObject.closeConnection();      
+      monitorDao.closeConnection();      
     }
   }
   
@@ -46,8 +47,8 @@ public class MonitoringRound implements Runnable {
       
       MimeMessage mm = new MimeMessage(s);
       mm.setRecipients(Message.RecipientType.TO, email);
-      mm.setSubject("There has been an update to an API endpoint you are monitoring");
-      mm.setText("There has been a change to the resource at " + url);
+      mm.setSubject("There has been an update to an API endpoint you are monitoring.");
+      mm.setText("There has been a change to the resource at " + url + ".");
       
       Transport.send(mm);
     } catch (NamingException | MessagingException e) {
