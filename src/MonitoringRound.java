@@ -15,9 +15,11 @@ import javax.naming.NamingException;
 
 public class MonitoringRound implements Runnable {  
   public void run() {    
-    MonitorDao monitorDao = new MonitorDaoImpl();    
-    try {      
+    MonitorDao monitorDao = null;    
+    try {   
+      monitorDao = new MonitorDaoImpl();  
       ResultSet resultSet = monitorDao.selectAllMonitors();  
+      monitorDao.closeConnection();
       while (resultSet.next()) {        
         URL url = new URL(resultSet.getString("url"));
         String email = resultSet.getString("email");
@@ -27,7 +29,7 @@ public class MonitoringRound implements Runnable {
         
         long contentLength = uc.getContentLengthLong();
         if (contentLength != lastContentLength) {
-          monitorDao.updateMonitor(contentLength, null);          
+          monitorDao.updateMonitor(url.toString(), email, contentLength);          
           sendEmail(url.toString(), email);
           return;
         }           
@@ -35,7 +37,7 @@ public class MonitoringRound implements Runnable {
     } catch (SQLException | IOException e) {
       e.printStackTrace();
     } finally {
-      monitorDao.closeConnection();      
+           
     }
   }
   

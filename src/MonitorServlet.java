@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -18,27 +19,22 @@ public class MonitorServlet extends HttpServlet {
       throws ServletException {
     
     String url = request.getParameter("url");
-    String email = request.getParameter("email");
+    String email = request.getParameter("email");    
     
-    String result = checkParams(url, email);
+    checkParams(url, email).ifPresent((errorMessage) -> {
+      setResponse(response, 400, errorMessage);
+      return;  
+    });
     
-    if (!result.equals("OK")) {
-      setResponse(response, 400, result);
-      return;
-    }
+    validateUrl(url).ifPresent((errorMessage) -> {
+      setResponse(response, 400, errorMessage);
+      return;      
+    });
     
-    result = validateUrl(url);
-    
-    if (!result.equals("OK")) {
-      setResponse(response, 400, result);
-      return;
-    }
-    
-    result = validateEmail(email);    
-    if (!result.equals("OK")) {
-      setResponse(response, 400, result);
-      return;
-    }	  
+    validateEmail(email).ifPresent((errorMessage) -> {
+      setResponse(response, 400, errorMessage);
+      return;  
+    });    
        
     URLConnection uc = null;    
     try {
@@ -49,8 +45,9 @@ public class MonitorServlet extends HttpServlet {
     }    
     long contentLength = uc.getContentLengthLong();     
     
+    MonitorDao md = null;
     try {
-      MonitorDao md = new MonitorDaoImpl(); 
+      md = new MonitorDaoImpl(); 
       
       if (md.containsMonitor(url, email)) {
         setResponse(response, 409, "Resource already exists");
@@ -58,11 +55,14 @@ public class MonitorServlet extends HttpServlet {
       }
       
       md.insertMonitor(url, email, contentLength);
-      md.closeConnection();
     } catch (SQLException e) {
       response.setStatus(500);
       return;
-    }   
+    } finally {
+      if (md != null) {
+        md.closeConnection();
+      }      
+    }
 	 
     response.setStatus(201);
   }
@@ -72,29 +72,50 @@ public class MonitorServlet extends HttpServlet {
     String url = request.getParameter("url");   
     String email = request.getParameter("email");
     
-    MonitorDaoImpl dao = new MonitorDaoImpl();
-    dao.deleteMonitor(url, email);
-    dao.closeConnection();
-   
+    checkParams(url, email).ifPresent((errorMessage) -> {
+      setResponse(response, 400, errorMessage);
+      return;  
+    });
+    
+    MonitorDao md = null;
+    try {
+      md = new MonitorDaoImpl(); 
+      
+      if (!md.containsMonitor(url, email)) {
+        response.setStatus(404);
+        return;
+      }
+      
+      md.deleteMonitor(url, email);
+    } catch (SQLException e) {
+      response.setStatus(500);
+      return;
+    } finally {
+      if (md != null) {
+        md.closeConnection();
+      }      
+    }
+ 
     response.setStatus(204);
   }	
   
-  private static String checkParams(String url, String email) {
-    if (url == null && email == null) {         
-      return "No URL or email provided";
-    } else if (url == null) {
-      return "No URL provided";
-    } else if (email == null) {
-      return "No email provided";
-    } 
-    return "OK";
+  public static Optional<String> checkParams(String url, String email) {       
+    if (url == null) {
+      return Optional.of("No URL provided");
+    }
+    
+    if (email == null) {
+      return Optional.of("No email provided");
+    }
+    
+    return Optional.empty();
   }
   
-  private static void setResponse(HttpServletResponse response, int status, String message) {   
+  public static void setResponse(HttpServletResponse response, int status, String message) {   
     try {
       response.getWriter().write(message);
     } catch (IOException e) {
-      response.setStatus(500);
+      response.setStatus(status);
       return;
     }
     
@@ -102,19 +123,23 @@ public class MonitorServlet extends HttpServlet {
     response.setContentType("text/plain");    
   }
   
-  private static String validateUrl(String url) {
+  public static Optional<String> validateUrl(String url) {
+    if (url == null) {
+      return Optional.of("No URL provided");
+    }
+    
     URL urlObject = null;
     
     try {
       urlObject = new URL(url);      
-    } catch (MalformedURLException e) {      
-      return "Provided URL malformed";
+    } catch (MalformedURLException e) { 
+      return Optional.of("Provided URL malformed");
     } 
     
     if (!urlObject.getProtocol().equalsIgnoreCase("http") 
         && !urlObject.getProtocol().equalsIgnoreCase("https")) {      
       
-      return "Provided URL's protocol not HTTP or HTTPS";
+      return Optional.of("Provided URL's protocol not HTTP or HTTPS");
     }
     
     HttpURLConnection huc = null;
@@ -123,35 +148,35 @@ public class MonitorServlet extends HttpServlet {
       huc = (HttpURLConnection) urlObject.openConnection();
       
       if (huc.getResponseCode() != 200) {
-        return "Request to provided URL failed";
+        return Optional.of("Request to provided URL failed");
       }
     } catch (IOException e) {
-      return "Request to provided URL failed";
+      return Optional.of("Request to provided URL failed");
     }
     
     String contentType = huc.getContentType();
     if (!contentType.startsWith("application/json")) {
-      return "Provided URL's response type not JSON";
+      return Optional.of("Provided URL's response type not JSON");
     }
     
     if (url.length() > 2083) {
-      return "Provided URL greater than 2083 characters";
+      return Optional.of("Provided URL greater than 2083 characters");
     }   
     
-    return "OK";
-  }
+    return Optional.empty();
+  }  
   
-  private static String validateEmail(String email) {    
+  public static Optional<String> validateEmail(String email) {    
     try {
       (new InternetAddress(email)).validate();
     } catch (AddressException e) {
-      return "Provided email malformed";
+      return Optional.of("Provided email malformed");
     }    
     
     if (email.length() > 2083) {
-      return "Provided email greater than 255 characters";
+      return Optional.of("Provided email greater than 255 characters");
     }  
     
-    return "OK";
+    return Optional.empty();
   }  
 }

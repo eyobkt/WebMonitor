@@ -81,7 +81,10 @@ public class MonitorDaoImpl implements MonitorDao {
     ps.executeUpdate();      
   }
   
-  public void closeConnection() throws SQLException {
-    connection.close();
+  public void closeConnection() {
+    try {
+      connection.close();
+    } catch (SQLException e) {
+    }
   }
 }
