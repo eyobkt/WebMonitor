@@ -1,0 +1,5 @@
+package eyobkt.restapichangemonitor;
+
+import java.sql.SQLIntegrityConstraintViolationException;
+
+public class PrimaryKeyConstraintViolationException extends SQLIntegrityConstraintViolationException {}

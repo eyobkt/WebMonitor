@@ -1,3 +1,4 @@
+package eyobkt.restapichangemonitor;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -13,13 +14,19 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-public class MonitoringRound implements Runnable {  
+public class MonitoringRound implements Runnable { 
+  
+  private MonitorDaoFactory monitorDaoFactory;
+  
+  public MonitoringRound(MonitorDaoFactory monitorDaoFactory) {
+    this.monitorDaoFactory = monitorDaoFactory;
+  }
+  
   public void run() {    
     MonitorDao monitorDao = null;    
     try {   
-      monitorDao = new MonitorDaoImpl();  
+      monitorDao = monitorDaoFactory.createMonitorDao();  
       ResultSet resultSet = monitorDao.selectAllMonitors();  
-      monitorDao.closeConnection();
       while (resultSet.next()) {        
         URL url = new URL(resultSet.getString("url"));
         String email = resultSet.getString("email");
@@ -37,7 +44,7 @@ public class MonitoringRound implements Runnable {
     } catch (SQLException | IOException e) {
       e.printStackTrace();
     } finally {
-           
+      monitorDao.closeConnection();           
     }
   }
   

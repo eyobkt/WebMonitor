@@ -1,3 +1,5 @@
+package eyobkt.restapichangemonitor;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -13,50 +15,60 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class MonitorServlet extends HttpServlet {        
+public class MonitorService extends HttpServlet {  
   
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+  private MonitorDaoFactory monitorDaoFactory;
+  
+  MonitorService(MonitorDaoFactory monitorDaoFactory) {
+    this.monitorDaoFactory = monitorDaoFactory;
+  }
+  
+  public void doPost(HttpServletRequest request, HttpServletResponse response) 
       throws ServletException {
     
     String url = request.getParameter("url");
     String email = request.getParameter("email");    
     
-    checkParams(url, email).ifPresent((errorMessage) -> {
-      setResponse(response, 400, errorMessage);
-      return;  
-    });
+    Optional<String> errorMessage = checkParams(url, email);
     
-    validateUrl(url).ifPresent((errorMessage) -> {
-      setResponse(response, 400, errorMessage);
-      return;      
-    });
-    
-    validateEmail(email).ifPresent((errorMessage) -> {
-      setResponse(response, 400, errorMessage);
+    if (errorMessage.isPresent()) {    
+      setResponse(response, 400, errorMessage.get());
       return;  
-    });    
+    }
+    
+    errorMessage = validateUrl(url);    
+    if (errorMessage.isPresent()) {    
+      setResponse(response, 400, errorMessage.get());
+      return;  
+    }
+    
+    errorMessage = validateEmail(email);
+    if (errorMessage.isPresent()) {    
+      setResponse(response, 400, errorMessage.get());
+      return;  
+    }
        
     URLConnection uc = null;    
     try {
       uc = (new URL(url)).openConnection(); 
     } catch (IOException e) {
       response.setStatus(500);
+      e.printStackTrace();
       return;
     }    
     long contentLength = uc.getContentLengthLong();     
     
     MonitorDao md = null;
     try {
-      md = new MonitorDaoImpl(); 
-      
-      if (md.containsMonitor(url, email)) {
-        setResponse(response, 409, "Resource already exists");
-        return;
-      }
-      
+      md = monitorDaoFactory.createMonitorDao();       
       md.insertMonitor(url, email, contentLength);
-    } catch (SQLException e) {
-      response.setStatus(500);
+    } catch (SQLException e) {      
+      if (e instanceof PrimaryKeyConstraintViolationException) {
+        setResponse(response, 409, "Resource already exists");      
+      } else {
+        response.setStatus(500);
+        e.printStackTrace();
+      }                  
       return;
     } finally {
       if (md != null) {
@@ -67,28 +79,29 @@ public class MonitorServlet extends HttpServlet {
     response.setStatus(201);
   }
   
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response) 
-      throws ServletException, IOException {
+  public void doDelete(HttpServletRequest request, HttpServletResponse response) 
+      throws ServletException {
+    
     String url = request.getParameter("url");   
     String email = request.getParameter("email");
     
-    checkParams(url, email).ifPresent((errorMessage) -> {
-      setResponse(response, 400, errorMessage);
+    Optional<String> errorMessage = checkParams(url, email);    
+    if (errorMessage.isPresent()) {    
+      setResponse(response, 400, errorMessage.get());
       return;  
-    });
+    }
     
     MonitorDao md = null;
     try {
-      md = new MonitorDaoImpl(); 
-      
-      if (!md.containsMonitor(url, email)) {
+      md = monitorDaoFactory.createMonitorDao();       
+      int numRowsDeleted = md.deleteMonitor(url, email);      
+      if (numRowsDeleted == 0) {
         response.setStatus(404);
         return;
-      }
-      
-      md.deleteMonitor(url, email);
-    } catch (SQLException e) {
+      }      
+    } catch (SQLException e) {      
       response.setStatus(500);
+      e.printStackTrace();
       return;
     } finally {
       if (md != null) {
@@ -99,7 +112,7 @@ public class MonitorServlet extends HttpServlet {
     response.setStatus(204);
   }	
   
-  public static Optional<String> checkParams(String url, String email) {       
+  private Optional<String> checkParams(String url, String email) {       
     if (url == null) {
       return Optional.of("No URL provided");
     }
@@ -111,23 +124,20 @@ public class MonitorServlet extends HttpServlet {
     return Optional.empty();
   }
   
-  public static void setResponse(HttpServletResponse response, int status, String message) {   
+  private void setResponse(HttpServletResponse response, int status, String message) {   
+    response.setStatus(status);      
+    
     try {
       response.getWriter().write(message);
     } catch (IOException e) {
-      response.setStatus(status);
+      e.printStackTrace();
       return;
-    }
+    }  
     
-    response.setStatus(status);
-    response.setContentType("text/plain");    
+    response.setContentType("text/plain");
   }
   
-  public static Optional<String> validateUrl(String url) {
-    if (url == null) {
-      return Optional.of("No URL provided");
-    }
-    
+  private Optional<String> validateUrl(String url) {    
     URL urlObject = null;
     
     try {
@@ -166,7 +176,7 @@ public class MonitorServlet extends HttpServlet {
     return Optional.empty();
   }  
   
-  public static Optional<String> validateEmail(String email) {    
+  private Optional<String> validateEmail(String email) {    
     try {
       (new InternetAddress(email)).validate();
     } catch (AddressException e) {

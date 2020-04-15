@@ -1,51 +1,46 @@
+package eyobkt.restapichangemonitor;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-public class MonitorDaoImpl implements MonitorDao {  
+public class MonitorDao {  
   
-  private Connection connection; 
+  private Connection connection;    
   
-  private static DataSource dataSource;   
-  
-  static {    
-    try {
-      Context c = new InitialContext();
-      c = (Context) c.lookup("java:comp/env");
-      dataSource = (DataSource) c.lookup("jdbc/restApiChangeMonitorDb");
-    } catch (NamingException e) {
-      e.printStackTrace();
-    }
-  }  
-  
-  public MonitorDaoImpl() throws SQLException {
+  public MonitorDao(DataSource dataSource) throws SQLException {    
     connection = dataSource.getConnection();
   }
     
   public void insertMonitor(String url, String email, long contentLength) throws SQLException {
     String sql = "INSERT INTO monitor "  
                + "VALUES(?, ?, ?, null)";
-    PreparedStatement ps = connection.prepareStatement(sql);
-    ps.setString(1, url);
-    ps.setString(2, email);
-    ps.setLong(3, contentLength);
-    ps.executeUpdate(); 
+    try {      
+      PreparedStatement ps = connection.prepareStatement(sql);
+      ps.setString(1, url);
+      ps.setString(2, email);
+      ps.setLong(3, contentLength);
+      ps.executeUpdate(); 
+    } catch (SQLException e) {
+      if (e.getErrorCode() == 1062) {
+        throw new PrimaryKeyConstraintViolationException();
+      } else {
+        throw e;
+      }
+    }    
   }
   
-  public void deleteMonitor(String url, String email) throws SQLException {
+  public int deleteMonitor(String url, String email) throws SQLException {    
     String sql = "DELETE FROM monitor "
                + "WHERE url = ? AND email = ?";
     PreparedStatement ps = connection.prepareStatement(sql);
     ps.setString(1, url);
     ps.setString(2, email);
-    ps.executeUpdate();  
+    return ps.executeUpdate();  
   }
   
   public boolean containsMonitor(String url, String email) throws SQLException {    
@@ -59,7 +54,7 @@ public class MonitorDaoImpl implements MonitorDao {
     PreparedStatement ps = connection.prepareStatement(sql);
     ps.setString(1, url);
     ps.setString(2, email);
-    return ps.executeQuery(sql);
+    return ps.executeQuery();
   }
   
   public ResultSet selectAllMonitors() throws SQLException {
