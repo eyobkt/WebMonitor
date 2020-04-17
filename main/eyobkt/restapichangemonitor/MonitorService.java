@@ -20,6 +20,10 @@ public class MonitorService extends HttpServlet {
   private MonitorDaoFactory monitorDaoFactory;
   
   MonitorService(MonitorDaoFactory monitorDaoFactory) {
+    if (monitorDaoFactory == null) {
+      throw new IllegalArgumentException();      
+    }
+    
     this.monitorDaoFactory = monitorDaoFactory;
   }
   

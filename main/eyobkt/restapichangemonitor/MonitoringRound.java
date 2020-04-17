@@ -19,14 +19,19 @@ public class MonitoringRound implements Runnable {
   private MonitorDaoFactory monitorDaoFactory;
   
   public MonitoringRound(MonitorDaoFactory monitorDaoFactory) {
+    if (monitorDaoFactory == null) {
+      throw new IllegalArgumentException();      
+    }
+    
     this.monitorDaoFactory = monitorDaoFactory;
   }
   
   public void run() {    
-    MonitorDao monitorDao = null;    
+    MonitorDao monitorDao = null;   
+    ResultSet resultSet = null;
     try {   
       monitorDao = monitorDaoFactory.createMonitorDao();  
-      ResultSet resultSet = monitorDao.selectAllMonitors();  
+      resultSet = monitorDao.selectAllMonitors();  
       while (resultSet.next()) {        
         URL url = new URL(resultSet.getString("url"));
         String email = resultSet.getString("email");
@@ -44,7 +49,18 @@ public class MonitoringRound implements Runnable {
     } catch (SQLException | IOException e) {
       e.printStackTrace();
     } finally {
-      monitorDao.closeConnection();           
+      if (monitorDao != null) {
+        monitorDao.closeConnection();    
+      }
+      
+      if (resultSet != null) {
+        try {
+          resultSet.close();
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+            
     }
   }
   
