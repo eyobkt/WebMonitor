@@ -1,4 +1,5 @@
 package eyobkt.restapichangemonitor;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,9 +11,10 @@ public class MonitorScheduler implements ServletContextListener {
   
   ScheduledExecutorService seService;
   
-  public void contextInitialized(ServletContextEvent sce) {    
+  public void contextInitialized(ServletContextEvent sce) {   
+    MonitorDaoFactory mdf = new MonitorDaoFactory();    
     seService = Executors.newSingleThreadScheduledExecutor();
-    seService.scheduleAtFixedRate(new MonitoringRound(new MonitorDaoFactory()), 0, 1, TimeUnit.MINUTES);
+    seService.scheduleAtFixedRate(new MonitoringRound(mdf), 0, 1, TimeUnit.MINUTES);
   }
   
   public void contextDestroyed(ServletContextEvent sce) {

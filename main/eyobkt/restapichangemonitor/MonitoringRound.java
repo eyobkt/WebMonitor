@@ -1,7 +1,8 @@
 package eyobkt.restapichangemonitor;
+
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -17,6 +18,7 @@ import javax.naming.NamingException;
 public class MonitoringRound implements Runnable { 
   
   private MonitorDaoFactory monitorDaoFactory;
+  private Session mailSession;
   
   public MonitoringRound(MonitorDaoFactory monitorDaoFactory) {
     if (monitorDaoFactory == null) {
@@ -24,6 +26,15 @@ public class MonitoringRound implements Runnable {
     }
     
     this.monitorDaoFactory = monitorDaoFactory;
+    
+    try {
+      Context c = new InitialContext();
+      c = (Context) c.lookup("java:comp/env");
+      mailSession = (Session) c.lookup("mail/Session");
+    } catch (NamingException e) {
+      e.printStackTrace();
+      return;
+    }    
   }
   
   public void run() {    
@@ -31,28 +42,24 @@ public class MonitoringRound implements Runnable {
     ResultSet resultSet = null;
     try {   
       monitorDao = monitorDaoFactory.createMonitorDao();  
-      resultSet = monitorDao.selectAllMonitors();  
+      resultSet = monitorDao.selectAllMonitors();        
+      
       while (resultSet.next()) {        
         URL url = new URL(resultSet.getString("url"));
         String email = resultSet.getString("email");
         long lastContentLength = resultSet.getLong("last_content_length");
         
-        HttpURLConnection uc = (HttpURLConnection) url.openConnection();
+        URLConnection uc = url.openConnection();
         
-        long contentLength = uc.getContentLengthLong();
-        if (contentLength != lastContentLength) {
-          monitorDao.updateMonitor(url.toString(), email, contentLength);          
+        long newContentLength = uc.getContentLengthLong();
+        if (newContentLength != lastContentLength) {
+          monitorDao.updateMonitor(url.toString(), email, newContentLength);          
           sendEmail(url.toString(), email);
-          return;
         }           
       }
     } catch (SQLException | IOException e) {
       e.printStackTrace();
     } finally {
-      if (monitorDao != null) {
-        monitorDao.closeConnection();    
-      }
-      
       if (resultSet != null) {
         try {
           resultSet.close();
@@ -60,23 +67,22 @@ public class MonitoringRound implements Runnable {
           e.printStackTrace();
         }
       }
-            
+      
+      if (monitorDao != null) {
+        monitorDao.closeConnection();    
+      }            
     }
   }
   
   private void sendEmail(String url, String email) {    
     try {
-      Context c = new InitialContext();
-      c = (Context) c.lookup("java:comp/env");
-      Session s = (Session) c.lookup("mail/Session");
-      
-      MimeMessage mm = new MimeMessage(s);
+      MimeMessage mm = new MimeMessage(mailSession);
       mm.setRecipients(Message.RecipientType.TO, email);
       mm.setSubject("There has been an update to an API endpoint you are monitoring.");
-      mm.setText("There has been a change to the resource at " + url + ".");
+      mm.setText("There has been a change to the resource at " + url + ".");      
       
       Transport.send(mm);
-    } catch (NamingException | MessagingException e) {
+    } catch (MessagingException e) {
       e.printStackTrace();
     } 
   }

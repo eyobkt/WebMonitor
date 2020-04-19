@@ -23,6 +23,6 @@ public class MonitorDaoFactory {
   }
 
   public MonitorDao createMonitorDao() throws SQLException {
-    return new MonitorDaoImpl(dataSource.getConnection());
+    return new MonitorDao(dataSource.getConnection());
   }
 }
