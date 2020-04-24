@@ -8,10 +8,7 @@
   <display-name>REST-Monitor</display-name>	
 	
   <listener>
-    <listener-class>eyobkt.restmonitor.MonitorScheduler</listener-class>
-  </listener>
-  <listener>
-    <listener-class>eyobkt.restmonitor.MonitorServiceCreator</listener-class>
+    <listener-class>eyobkt.restmonitor.EntryPoint</listener-class>
   </listener>
 	
   <resource-ref>
