@@ -10,7 +10,7 @@ public class MonitorScheduler {
   
   public MonitorScheduler(MonitorDaoFactory monitorDaoFactory) {      
     seService = Executors.newSingleThreadScheduledExecutor();
-    seService.scheduleAtFixedRate(new MonitoringRound(monitorDaoFactory), 0, 60, TimeUnit.MINUTES);
+    seService.scheduleAtFixedRate(new MonitoringRound(monitorDaoFactory), 0, 2, TimeUnit.MINUTES);
   }
   
   public void shutdownNow() {
