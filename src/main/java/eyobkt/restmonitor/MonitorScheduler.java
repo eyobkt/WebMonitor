@@ -6,14 +6,14 @@ import java.util.concurrent.TimeUnit;
 
 public class MonitorScheduler {
   
-  ScheduledExecutorService seService;
+  ScheduledExecutorService scheduledExecutorService;
   
-  public MonitorScheduler(MonitorDaoFactory monitorDaoFactory) {      
-    seService = Executors.newSingleThreadScheduledExecutor();
-    seService.scheduleAtFixedRate(new MonitoringRound(monitorDaoFactory), 0, 2, TimeUnit.MINUTES);
+  public MonitorScheduler(MonitoringRound monitoringRound) {      
+    scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    scheduledExecutorService.scheduleAtFixedRate(monitoringRound, 0, 10, TimeUnit.MINUTES);
   }
   
   public void shutdownNow() {
-    seService.shutdownNow();
+    scheduledExecutorService.shutdownNow();
   }
 }

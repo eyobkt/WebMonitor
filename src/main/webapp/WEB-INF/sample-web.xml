@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
+    version="3.1">
+  
+  <display-name>REST Monitor</display-name> 
+  
+  <context-param>
+    <param-name>DB_USERNAME</param-name>
+    <param-value>YOUR_DB_USERNAME</param-value>
+  </context-param>
+  <context-param>
+    <param-name>DB_PASSWORD</param-name>
+    <param-value>YOUR_DB_PASSWORD</param-value>
+  </context-param>
+  <context-param>
+    <param-name>DB_DRIVER_CLASS_NAME</param-name>
+    <param-value>YOUR_DB_DRIVER_CLASS_NAME</param-value>
+  </context-param>
+  <context-param>
+    <param-name>DB_URL</param-name>
+    <param-value>YOUR_DB_URL</param-value>
+  </context-param>
+  <context-param>
+    <param-name>EMAIL_HOST</param-name>
+    <param-value>YOUR_EMAIL_HOST</param-value>
+  </context-param>
+  <context-param>
+    <param-name>EMAIL_ADDRESS</param-name>
+    <param-value>YOUR_EMAIL_ADDRESS</param-value>
+  </context-param>
+  <context-param>
+    <param-name>EMAIL_PASSWORD</param-name>
+    <param-value>YOUR_EMAIL_PASSWORD</param-value>
+  </context-param>
+</web-app>
