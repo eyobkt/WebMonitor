@@ -14,31 +14,42 @@ import javax.sql.DataSource;
 
 import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
 
+import eyobkt.restmonitor.emailsender.EmailSenderFactory;
+
+/**
+ * The class first loaded
+ */
 @WebListener
 public class EntryPoint implements ServletContextListener {
   
-  private MonitorScheduler monitorScheduler;
+  private CheckingTaskScheduler checkingTaskScheduler;
   
-  public void contextInitialized(ServletContextEvent sce) {
-    ServletContext servletContext = sce.getServletContext();     
+  /**
+   * Creates a MonitorService servlet and a CheckingTaskScheduler at the beginning of the application. 
+   * The former is done programmatically, rather than through the deployment descriptor or by 
+   * annotation, so that the servlet's dependencies can be injected
+   */
+  public void contextInitialized(ServletContextEvent servletContextEvent) {
+    ServletContext servletContext = servletContextEvent.getServletContext();     
     
-    DataSource ds = createDataSource(servletContext);
-    MonitorDaoFactory monitorDaoFactory = new MonitorDaoFactory(ds);     
+    DataSource dataSource = createDataSource(servletContext);
+    MonitorDaoFactory monitorDaoFactory = new MonitorDaoFactory(dataSource);     
     
     servletContext.addServlet("monitorService", new MonitorService(monitorDaoFactory))
         .addMapping("/api/v1/monitor");
     
-    Session s = createMailSession(servletContext);    
-    MonitoringRound mr = null;
     try {
-      mr = new MonitoringRound(monitorDaoFactory, s);
+      checkingTaskScheduler = createCheckingTaskScheduler(servletContext, monitorDaoFactory);
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
       return;
-    }    
-    monitorScheduler = new MonitorScheduler(mr);    
-  }
+    }   
+  }  
   
+  /**
+   * Uses the context init parameters defined in the deployment descriptor to create a pool of 
+   * connections to the application's data store
+   */
   private DataSource createDataSource(ServletContext servletContext) {
     BasicDataSource basicDataSource = new BasicDataSource();
     basicDataSource.setUsername(servletContext.getInitParameter("DB_USERNAME"));
@@ -48,27 +59,45 @@ public class EntryPoint implements ServletContextListener {
     basicDataSource.setMaxTotal(20);
     basicDataSource.setMaxIdle(5);
     basicDataSource.setMaxWaitMillis(-1);    
+    
     return basicDataSource;
   }
   
-  private Session createMailSession(ServletContext servletContext) {
-    Properties p = new Properties();
-    p.setProperty("mail.smtp.host", servletContext.getInitParameter("EMAIL_HOST"));
-    p.setProperty("mail.smtp.user", servletContext.getInitParameter("EMAIL_ADDRESS"));
-    p.setProperty("password", servletContext.getInitParameter("EMAIL_PASSWORD"));
-    p.setProperty("mail.smtp.starttls.enable", "true");
-    p.setProperty("mail.smtp.auth", "true");
-    p.setProperty("mail.smtp.port", "587");
+  private CheckingTaskScheduler createCheckingTaskScheduler(ServletContext servletContext
+      , MonitorDaoFactory monitorDaoFactory) throws UnsupportedEncodingException {
     
-    return Session.getInstance(p, new Authenticator() {
+    Session session = createEmailSession(servletContext);
+    EmailSenderFactory emailSenderFactory = new EmailSenderFactory(session, "REST Monitor");    
+    CheckingTask checkingTask = new CheckingTask(monitorDaoFactory, emailSenderFactory);
+    
+    return new CheckingTaskScheduler(checkingTask); 
+  }  
+  
+  /**
+   * Uses the context init parameters defined in the deployment descriptor to create a JavaMail 
+   * Session 
+   */
+  private Session createEmailSession(ServletContext servletContext) {
+    Properties properties = new Properties();
+    properties.setProperty("mail.smtp.host", servletContext.getInitParameter("EMAIL_HOST"));
+    properties.setProperty("mail.smtp.user", servletContext.getInitParameter("EMAIL_ADDRESS"));
+    properties.setProperty("password", servletContext.getInitParameter("EMAIL_PASSWORD"));
+    properties.setProperty("mail.smtp.starttls.enable", "true");
+    properties.setProperty("mail.smtp.auth", "true");
+    properties.setProperty("mail.smtp.port", "587");
+    
+    return Session.getInstance(properties, new Authenticator() {
       
       protected PasswordAuthentication getPasswordAuthentication() {
-        return new PasswordAuthentication(p.getProperty("mail.smtp.user"), p.getProperty("password"));
+        return new PasswordAuthentication(properties.getProperty("mail.smtp.user"), properties.getProperty("password"));
       }
     });
-  }
+  }  
   
-  public void contextDestroyed(ServletContextEvent sce) {
-    monitorScheduler.shutdownNow();
+  /**
+   * Shuts down the CheckingTaskScheduler at the ending of the application 
+   */
+  public void contextDestroyed(ServletContextEvent servletContextEvent) {
+    checkingTaskScheduler.shutdownNow();
   }
 }
