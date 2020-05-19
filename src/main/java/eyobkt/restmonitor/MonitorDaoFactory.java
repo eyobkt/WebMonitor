@@ -8,7 +8,11 @@ public class MonitorDaoFactory {
   
   private DataSource dataSource;
   
-  public MonitorDaoFactory(DataSource dataSource) {   
+  public MonitorDaoFactory(DataSource dataSource) {  
+    if (dataSource == null) {
+      throw new IllegalArgumentException();   
+    }
+    
     this.dataSource = dataSource; 
   }
 

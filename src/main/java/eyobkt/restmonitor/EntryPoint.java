@@ -66,8 +66,8 @@ public class EntryPoint implements ServletContextListener {
   private CheckingTaskScheduler createCheckingTaskScheduler(ServletContext servletContext
       , MonitorDaoFactory monitorDaoFactory) throws UnsupportedEncodingException {
     
-    Session session = createEmailSession(servletContext);
-    EmailSenderFactory emailSenderFactory = new EmailSenderFactory(session, "REST Monitor");    
+    Session emailSession = createEmailSession(servletContext);
+    EmailSenderFactory emailSenderFactory = new EmailSenderFactory(emailSession, "REST Monitor");    
     CheckingTask checkingTask = new CheckingTask(monitorDaoFactory, emailSenderFactory);
     
     return new CheckingTaskScheduler(checkingTask); 

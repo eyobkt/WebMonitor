@@ -1,9 +1,8 @@
 package eyobkt.restmonitor;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -21,10 +20,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import eyobkt.restmonitor.Monitor;
 import eyobkt.restmonitor.MonitorDao;
 import eyobkt.restmonitor.MonitorDaoFactory;
 import eyobkt.restmonitor.MonitorService;
@@ -48,6 +48,9 @@ public class MonitorServiceTest {
   @Mock
   private PrintWriter printWriter;
   
+  @InjectMocks
+  private MonitorService monitorService;
+  
   @Before
   public void setUp() throws SQLException, IOException {
     when(response.getWriter()).thenReturn(printWriter);
@@ -62,7 +65,7 @@ public class MonitorServiceTest {
         "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json");
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(201);
     verify(response, times(1)).setStatus(anyInt());    
@@ -77,7 +80,7 @@ public class MonitorServiceTest {
     when(request.getParameter("url")).thenReturn(null);
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    
@@ -94,7 +97,7 @@ public class MonitorServiceTest {
     when(request.getParameter("url")).thenReturn("twitter");
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    
@@ -111,7 +114,7 @@ public class MonitorServiceTest {
     when(request.getParameter("url")).thenReturn("ftp://test.rebex.net");
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    
@@ -128,7 +131,7 @@ public class MonitorServiceTest {
     when(request.getParameter("url")).thenReturn("http://nonexistentwebsiteqmggtrbfcfyh.com");
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    
@@ -145,13 +148,13 @@ public class MonitorServiceTest {
     when(request.getParameter("url")).thenReturn("https://github.com");
     when(request.getParameter("email")).thenReturn("email@address.com");    
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    
     verify(response, times(1)).setContentType("text/plain");
     verify(response, times(1)).setContentType(anyString());
-    verify(printWriter, times(1)).write("Provided URL's response type not JSON");   
+    verify(printWriter, times(1)).write("MIME type of response from provided URL not application/json");   
     verify(printWriter, times(1)).write(anyString());
   } 
   
@@ -163,10 +166,10 @@ public class MonitorServiceTest {
     String email = "email@address.com";
     when(request.getParameter("url")).thenReturn(url);
     when(request.getParameter("email")).thenReturn(email);    
-    doThrow(PrimaryKeyConstraintViolationException.class).when(monitorDao).insertMonitor(
-        eq(url), eq(email), anyLong());
+    doThrow(PrimaryKeyConstraintViolationException.class).when(monitorDao)
+        .insertMonitor(any(Monitor.class));
     
-    (new MonitorService(monitorDaoFactory)).doPost(request, response);
+    monitorService.doPost(request, response);
     
     verify(response, times(1)).setStatus(409);
     verify(response, times(1)).setStatus(anyInt());    
@@ -186,7 +189,7 @@ public class MonitorServiceTest {
     when(request.getParameter("email")).thenReturn(email);  
     when(monitorDao.deleteMonitor(url, email)).thenReturn(1);
     
-    (new MonitorService(monitorDaoFactory)).doDelete(request, response);
+    monitorService.doDelete(request, response);
     
     verify(response, times(1)).setStatus(204);
     verify(response, times(1)).setStatus(anyInt());    
@@ -204,7 +207,7 @@ public class MonitorServiceTest {
     when(request.getParameter("email")).thenReturn(email);  
     when(monitorDao.deleteMonitor(url, email)).thenReturn(0);
     
-    (new MonitorService(monitorDaoFactory)).doDelete(request, response);
+    monitorService.doDelete(request, response);
     
     verify(response, times(1)).setStatus(404);
     verify(response, times(1)).setStatus(anyInt());    
@@ -220,7 +223,7 @@ public class MonitorServiceTest {
         "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json");
     when(request.getParameter("email")).thenReturn(null);    
     
-    (new MonitorService(monitorDaoFactory)).doDelete(request, response);
+    monitorService.doDelete(request, response);
     
     verify(response, times(1)).setStatus(400);
     verify(response, times(1)).setStatus(anyInt());    

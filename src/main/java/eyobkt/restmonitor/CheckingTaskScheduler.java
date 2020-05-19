@@ -4,13 +4,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MonitorScheduler {
+/**
+ * Runs a CheckingTask once an hour 
+ */
+public class CheckingTaskScheduler {
   
   ScheduledExecutorService scheduledExecutorService;
   
-  public MonitorScheduler(MonitoringRound monitoringRound) {      
+  public CheckingTaskScheduler(CheckingTask checkingTask) {      
+    if (checkingTask == null) {
+      throw new IllegalArgumentException();   
+    }
+    
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(monitoringRound, 0, 10, TimeUnit.MINUTES);
+    scheduledExecutorService.scheduleAtFixedRate(checkingTask, 0, 60, TimeUnit.MINUTES);
   }
   
   public void shutdownNow() {
