@@ -1,2 +1,5 @@
 /target/
 web.xml
+.settings
+.classpath
+.project
