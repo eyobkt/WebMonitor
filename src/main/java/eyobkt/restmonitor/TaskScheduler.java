@@ -5,19 +5,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Runs a CheckingTask once an hour 
+ * Runs a Runnable once every number of minutes specified by the period argument
  */
-public class CheckingTaskScheduler {
+public class TaskScheduler {
   
   ScheduledExecutorService scheduledExecutorService;
   
-  public CheckingTaskScheduler(CheckingTask checkingTask) {      
-    if (checkingTask == null) {
+  public TaskScheduler(Runnable runnable, long period) {      
+    if (runnable == null) {
       throw new IllegalArgumentException();   
     }
     
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(checkingTask, 0, 60, TimeUnit.MINUTES);
+    scheduledExecutorService.scheduleAtFixedRate(runnable, 0, period, TimeUnit.MINUTES);
   }
   
   public void shutdownNow() {
