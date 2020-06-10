@@ -17,17 +17,18 @@ import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
 import eyobkt.restmonitor.emailsender.EmailSenderFactory;
 
 /**
- * The class first loaded
+ * The class first loaded. contextInitialized() is called at the beginning of the application, and 
+ * contextDestroyed() is called at the end 
  */
 @WebListener
 public class EntryPoint implements ServletContextListener {
   
-  private CheckingTaskScheduler checkingTaskScheduler;
+  private TaskScheduler taskScheduler;
   
   /**
-   * Creates a MonitorService servlet and a CheckingTaskScheduler at the beginning of the application. 
-   * The former is done programmatically, rather than through the deployment descriptor or by 
-   * annotation, so that the servlet's dependencies can be injected
+   * Creates a MonitorService servlet and calls scheduleCheckingTasks(). The former is done programmatically
+   * , rather than through the deployment descriptor or by annotation, so that the servlet's dependencies 
+   * can be injected
    */
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     ServletContext servletContext = servletContextEvent.getServletContext();     
@@ -39,10 +40,9 @@ public class EntryPoint implements ServletContextListener {
         .addMapping("/api/v1/monitor");
     
     try {
-      checkingTaskScheduler = createCheckingTaskScheduler(servletContext, monitorDaoFactory);
+      scheduleCheckingTasks(servletContext, monitorDaoFactory);
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
-      return;
     }   
   }  
   
@@ -63,14 +63,17 @@ public class EntryPoint implements ServletContextListener {
     return basicDataSource;
   }
   
-  private CheckingTaskScheduler createCheckingTaskScheduler(ServletContext servletContext
+  /**
+   * Creates a TaskScheduler that runs a CheckingTask once every 60 minutes
+   */
+  private void scheduleCheckingTasks(ServletContext servletContext
       , MonitorDaoFactory monitorDaoFactory) throws UnsupportedEncodingException {
     
     Session emailSession = createEmailSession(servletContext);
     EmailSenderFactory emailSenderFactory = new EmailSenderFactory(emailSession, "REST Monitor");    
     CheckingTask checkingTask = new CheckingTask(monitorDaoFactory, emailSenderFactory);
     
-    return new CheckingTaskScheduler(checkingTask); 
+    taskScheduler = new TaskScheduler(checkingTask, 60); 
   }  
   
   /**
@@ -95,9 +98,9 @@ public class EntryPoint implements ServletContextListener {
   }  
   
   /**
-   * Shuts down the CheckingTaskScheduler at the ending of the application 
+   * Shuts down the TaskScheduler 
    */
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
-    checkingTaskScheduler.shutdownNow();
+    taskScheduler.shutdownNow();
   }
 }

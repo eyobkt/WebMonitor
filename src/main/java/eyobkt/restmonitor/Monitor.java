@@ -43,10 +43,7 @@ public class Monitor {
   private String lastContent;
 
   /**
-   * The constructor to be used when a Monitor is first created. Validates inputs 
-   * 
-   * @param url the URL to be checked
-   * @param email the email address to which notifications are to be sent
+   * The constructor to be used when a Monitor is first created. Validates inputs
    */
   Monitor(String url, String email) throws IllegalArgumentException, IOException {    
     Optional<String> errorMessage = validateUrl(url);
@@ -71,14 +68,6 @@ public class Monitor {
   
   /**
    * The constructor to be used when a Monitor is reloaded from the data store
-   * 
-   * @param url the URL to be checked
-   * @param email the email address to which notifications are to be sent
-   * @param lastStatusCode the HTTP status code returned the last time url was checked
-   * @param lastContentLength the value of the Content-Length header the last time url was checked 
-   *     and the status code returned was 200
-   * @param lastContent the response body the last time url was checked and the status code 
-   *     returned was 200     
    */
   Monitor(String url, String email, int lastStatusCode, long lastContentLength, String lastContent) {    
     try {
@@ -94,8 +83,8 @@ public class Monitor {
   }
  
   /**
-   * @return an Optional containing a String describing an error, if an error was found
-   *     ; an empty Optional, otherwise
+   * @return an Optional containing a String describing an error, if an error was found; an empty 
+   *     Optional, otherwise
    */
   private Optional<String> validateUrl(String url) {    
     if (url == null) {
@@ -141,8 +130,8 @@ public class Monitor {
   }  
   
   /**
-   * @return an Optional containing a String describing an error, if an error was found
-   *     ; an empty Optional, otherwise
+   * @return an Optional containing a String describing an error, if an error was found; an empty 
+   *     Optional, otherwise
    */
   private Optional<String> validateEmail(String email) {   
     if (email == null) {

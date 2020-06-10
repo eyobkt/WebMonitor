@@ -12,8 +12,8 @@ import eyobkt.restmonitor.emailsender.EmailSender;
 import eyobkt.restmonitor.emailsender.EmailSenderFactory;
 
 /**
- * When an instance of this class is executed by a thread, the checkUrlResponseForChanges method of each Monitor is 
- * called once. Changes are stored in the Monitor data store  
+ * When an instance of this class is executed by a thread, the checkUrlResponseForChanges method 
+ * of each Monitor is called once. Changes are stored in the Monitor data store  
  */
 public class CheckingTask implements Runnable { 
   
@@ -45,7 +45,7 @@ public class CheckingTask implements Runnable {
           if (monitor.checkUrlResponseForChanges(emailSender)) {
             monitorDao.updateMonitor(monitor);
           }
-        } catch (IOException | SQLException e) {
+        } catch (IOException | SQLException | MessagingException e) {
           e.printStackTrace();
         }
       }

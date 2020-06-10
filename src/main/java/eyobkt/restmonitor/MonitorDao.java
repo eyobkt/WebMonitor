@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MySQL implementation of a DAO for Monitors
+ * MySQL implementation of a Data Access Object for Monitors
  */
 public class MonitorDao implements AutoCloseable {  
   
@@ -26,15 +26,17 @@ public class MonitorDao implements AutoCloseable {
   public void insertMonitor(Monitor monitor) throws SQLException {
     String sql = "INSERT INTO monitor "  
                + "VALUES(?, ?, ?, ?, ?)";
-    PreparedStatement ps = null;
+    PreparedStatement preparedStatement = null;
+    
     try {      
-      ps = connection.prepareStatement(sql);
-      ps.setString(1, monitor.getUrl().toString());
-      ps.setString(2, monitor.getEmail());
-      ps.setInt(3, monitor.getLastStatusCode());
-      ps.setLong(4, monitor.getLastContentLength());
-      ps.setString(5, monitor.getLastContent());
-      ps.executeUpdate(); 
+      preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setString(1, monitor.getUrl().toString());
+      preparedStatement.setString(2, monitor.getEmail());
+      preparedStatement.setInt(3, monitor.getLastStatusCode());
+      preparedStatement.setLong(4, monitor.getLastContentLength());
+      preparedStatement.setString(5, monitor.getLastContent());
+      
+      preparedStatement.executeUpdate(); 
     } catch (SQLException e) {
       if (e.getErrorCode() == 1062) {
         throw new PrimaryKeyConstraintViolationException();
@@ -42,9 +44,9 @@ public class MonitorDao implements AutoCloseable {
         throw e;
       }
     } finally {
-      if (ps != null) {
+      if (preparedStatement != null) {
         try {
-          ps.close();
+          preparedStatement.close();
         } catch (SQLException e) {
           e.printStackTrace();
         }        
@@ -55,18 +57,20 @@ public class MonitorDao implements AutoCloseable {
   public int deleteMonitor(String url, String email) throws SQLException {    
     String sql = "DELETE FROM monitor "
                + "WHERE url = ? AND email = ?";
-    PreparedStatement ps = null;
+    PreparedStatement preparedStatement = null;
+    
     try {      
-      ps = connection.prepareStatement(sql);
-      ps.setString(1, url);
-      ps.setString(2, email);
-      return ps.executeUpdate(); 
+      preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setString(1, url);
+      preparedStatement.setString(2, email);
+      
+      return preparedStatement.executeUpdate(); 
     } catch (SQLException e) {
       throw e;
     } finally {
-      if (ps != null) {
+      if (preparedStatement != null) {
         try {
-          ps.close();
+          preparedStatement.close();
         } catch (SQLException e) {
           e.printStackTrace();
         }        
@@ -79,6 +83,7 @@ public class MonitorDao implements AutoCloseable {
                + "FROM monitor";
     Statement statement = null;
     ResultSet resultSet = null;
+    
     try {
       statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE
           , ResultSet.CONCUR_UPDATABLE); 
@@ -122,21 +127,23 @@ public class MonitorDao implements AutoCloseable {
     String sql = "UPDATE monitor "
                + "SET last_status_code = ?, last_content_length = ?, last_content = ? "
                + "WHERE url = ? AND email = ?";
-    PreparedStatement ps = null;
+    PreparedStatement preparedStatement = null;
+    
     try {      
-      ps = connection.prepareStatement(sql);
-      ps.setInt(1, monitor.getLastStatusCode());
-      ps.setLong(2, monitor.getLastContentLength());
-      ps.setString(3, monitor.getLastContent());
-      ps.setString(4, monitor.getUrl().toString());
-      ps.setString(5, monitor.getEmail());    
-      ps.executeUpdate();    
+      preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setInt(1, monitor.getLastStatusCode());
+      preparedStatement.setLong(2, monitor.getLastContentLength());
+      preparedStatement.setString(3, monitor.getLastContent());
+      preparedStatement.setString(4, monitor.getUrl().toString());
+      preparedStatement.setString(5, monitor.getEmail());    
+      
+      preparedStatement.executeUpdate();    
     } catch (SQLException e) {
       throw e;
     } finally {
-      if (ps != null) {
+      if (preparedStatement != null) {
         try {
-          ps.close();
+          preparedStatement.close();
         } catch (SQLException e) {
           e.printStackTrace();
         }        

@@ -56,7 +56,8 @@ public class MonitorService extends HttpServlet {
       } else {
         response.setStatus(500);
         e.printStackTrace();
-      }                  
+      }           
+      
       return;
     } 
 	 
@@ -84,7 +85,8 @@ public class MonitorService extends HttpServlet {
     }
     
     try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {    
-      int numRowsDeleted = monitorDao.deleteMonitor(url, email);      
+      int numRowsDeleted = monitorDao.deleteMonitor(url, email);     
+      
       if (numRowsDeleted == 0) {
         response.setStatus(404);
         return;

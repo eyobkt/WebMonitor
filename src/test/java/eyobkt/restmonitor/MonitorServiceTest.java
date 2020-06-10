@@ -1,13 +1,7 @@
 package eyobkt.restmonitor;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -63,7 +58,7 @@ public class MonitorServiceTest {
     
     when(request.getParameter("url")).thenReturn(
         "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json");
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -78,7 +73,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     when(request.getParameter("url")).thenReturn(null);
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -95,7 +90,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     when(request.getParameter("url")).thenReturn("twitter");
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -112,7 +107,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     when(request.getParameter("url")).thenReturn("ftp://test.rebex.net");
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -129,7 +124,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     when(request.getParameter("url")).thenReturn("http://nonexistentwebsiteqmggtrbfcfyh.com");
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -146,7 +141,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {      
     
     when(request.getParameter("url")).thenReturn("https://github.com");
-    when(request.getParameter("email")).thenReturn("email@address.com");    
+    when(request.getParameter("email")).thenReturn("email@example.com");    
     
     monitorService.doPost(request, response);
     
@@ -162,10 +157,9 @@ public class MonitorServiceTest {
   public void doPost_duplicateRequest_respondsWith409() throws ServletException
       , SQLException, IOException {      
     
-    String url = "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json";
-    String email = "email@address.com";
-    when(request.getParameter("url")).thenReturn(url);
-    when(request.getParameter("email")).thenReturn(email);    
+    when(request.getParameter("url")).thenReturn(
+        "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json");
+    when(request.getParameter("email")).thenReturn("email@example.com");      
     doThrow(PrimaryKeyConstraintViolationException.class).when(monitorDao)
         .insertMonitor(any(Monitor.class));
     
@@ -184,7 +178,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     String url = "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json";
-    String email = "email@address.com";
+    String email = "email@example.com";
     when(request.getParameter("url")).thenReturn(url);
     when(request.getParameter("email")).thenReturn(email);  
     when(monitorDao.deleteMonitor(url, email)).thenReturn(1);
@@ -202,7 +196,7 @@ public class MonitorServiceTest {
       , SQLException, IOException {     
     
     String url = "https://openlibrary.org/api/books?bibkeys=ISBN:0439800994&format=json";
-    String email = "email@address.com";
+    String email = "email@example.com";
     when(request.getParameter("url")).thenReturn(url);
     when(request.getParameter("email")).thenReturn(email);  
     when(monitorDao.deleteMonitor(url, email)).thenReturn(0);
