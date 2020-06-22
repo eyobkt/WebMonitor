@@ -42,7 +42,7 @@ public class MonitorService extends HttpServlet {
     } catch (IllegalArgumentException e) {
       setResponse(response, 400, e.getMessage());
       return;  
-    } catch (IOException e) {
+    } catch (InterruptedException e) {
       response.setStatus(500);
       e.printStackTrace();
       return;

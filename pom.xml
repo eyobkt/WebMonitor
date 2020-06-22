@@ -6,7 +6,7 @@
   
   <groupId>eyobkt</groupId>
   <artifactId>rest-monitor</artifactId>
-  <version>1.0.2</version>
+  <version>1.1.0</version>
   <packaging>war</packaging>
 
   <name>REST Monitor</name>  
@@ -46,7 +46,17 @@
       <groupId>com.sun.mail</groupId>
       <artifactId>javax.mail</artifactId>
       <version>1.6.2</version>
-    </dependency>   
+    </dependency>  
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>3.141.59</version>
+    </dependency> 
+    <dependency>
+      <groupId>io.github.bonigarcia</groupId>
+      <artifactId>webdrivermanager</artifactId>
+      <version>3.8.1</version>
+    </dependency>
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
@@ -55,7 +65,8 @@
     </dependency>     
   </dependencies>
 
-  <build>    
+  <build>   
+    <finalName>${project.artifactId}</finalName>  
     <plugins>
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>

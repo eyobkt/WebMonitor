@@ -1,9 +1,9 @@
 package eyobkt.restmonitor;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
+import eyobkt.restmonitor.emailsender.EmailSender;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
@@ -12,14 +12,17 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import eyobkt.restmonitor.emailsender.EmailSender;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 public class Monitor {
   
   /**
-   * The URL that is checked
+   * The URL of the page that is checked
    */
-  private URL url;  
+  private String url;  
   
   /**
    * The email address to which notifications are sent
@@ -27,25 +30,21 @@ public class Monitor {
   private String email;  
   
   /**
-   * The HTTP status code returned the last time url was checked
-   */
-  private int lastStatusCode;  
-  
-  /**
-   * The value of the Content-Length header the last time url was checked and the status code 
-   * returned was 200. -1 if there was no such header
-   */
-  private long lastContentLength;  
-  
-  /**
-   * The response body the last time url was checked and the status code returned was 200
+   * The text on the page the last time it was checked
    */
   private String lastContent;
-
+  
+  private static ChromeOptions chromeOptions = new ChromeOptions();  
+  
+  static {
+    WebDriverManager.chromedriver().setup();
+    chromeOptions.addArguments("--window-size=1920,1080");  
+  }  
+  
   /**
    * The constructor to be used when a Monitor is first created. Validates inputs
    */
-  Monitor(String url, String email) throws IllegalArgumentException, IOException {    
+  Monitor(String url, String email) throws IllegalArgumentException, InterruptedException {    
     Optional<String> errorMessage = validateUrl(url);
     
     if (errorMessage.isPresent()) {    
@@ -57,28 +56,23 @@ public class Monitor {
       throw new IllegalArgumentException(errorMessage.get());
     }    
     
-    this.url = new URL(url);
+    this.url = url;
     this.email = email;
-    lastStatusCode = 200;
     
-    HttpURLConnection httpUrlConnection = (HttpURLConnection) this.url.openConnection();
-    lastContentLength = httpUrlConnection.getContentLengthLong();
-    lastContent = getContent(httpUrlConnection.getInputStream());
+    try {
+      this.lastContent = getContent(url);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      throw e;
+    }    
   }
   
   /**
    * The constructor to be used when a Monitor is reloaded from the data store
    */
-  Monitor(String url, String email, int lastStatusCode, long lastContentLength, String lastContent) {    
-    try {
-      this.url = new URL(url);
-    } catch (MalformedURLException e) {
-      // url already validated
-    }
-    
+  Monitor(String url, String email, String lastContent) {    
+    this.url = url;
     this.email = email;
-    this.lastStatusCode = lastStatusCode;
-    this.lastContentLength = lastContentLength;
     this.lastContent = lastContent;
   }
  
@@ -104,24 +98,7 @@ public class Monitor {
       
       return Optional.of("Provided URL's protocol not HTTP or HTTPS");
     }
-    
-    HttpURLConnection httpUrlConnection = null;
-    
-    try {
-      httpUrlConnection = (HttpURLConnection) urlObject.openConnection();
-      
-      if (httpUrlConnection.getResponseCode() != 200) {
-        return Optional.of("Request to provided URL failed");
-      }
-    } catch (IOException e) {
-      return Optional.of("Request to provided URL failed");
-    }
-    
-    String contentType = httpUrlConnection.getContentType();
-    if (!contentType.startsWith("application/json")) {
-      return Optional.of("MIME type of response from provided URL not application/json");
-    }
-    
+  
     if (url.length() > 2083) {
       return Optional.of("Provided URL greater than 2083 characters");
     }   
@@ -151,7 +128,7 @@ public class Monitor {
     return Optional.empty();
   }  
   
-  public URL getUrl() {
+  public String getUrl() {
     return url;
   }
   
@@ -159,45 +136,20 @@ public class Monitor {
     return email;
   }
   
-  public int getLastStatusCode() {
-    return lastStatusCode;
-  }
-  
-  public long getLastContentLength() {
-    return lastContentLength;
-  }
-  
   public String getLastContent() {
     return lastContent;
   }
   
   /**
-   * Checks url for changes to its response. Sends a notification to email if a change 
-   * has been detected  
-   * 
    * @return true, if a change has been detected and a notification has been sent; false, otherwise
    */
-  public boolean checkUrlResponseForChanges(EmailSender emailSender) throws MessagingException
-      , IOException {
-       
-    HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();   
+  public boolean checkPageForChanges(EmailSender emailSender) throws MessagingException
+      , InterruptedException {
     
-    int newStatusCode = httpUrlConnection.getResponseCode();
+    String newContent = getContent(url);
     
-    if (newStatusCode != 200) {      
-      if (lastStatusCode == 200) {
-        lastStatusCode = newStatusCode;
-        sendEmailNotification(emailSender);
-        return true;
-      }
-      
-      return false;
-    }
-        
-    long newContentLength = httpUrlConnection.getContentLengthLong();     
-    String newContent = getContent(httpUrlConnection.getInputStream());
-
-    if (urlResponseHasChanged(newStatusCode, newContentLength, newContent)) {
+    if (!newContent.equals(lastContent)) {
+      lastContent = newContent;
       sendEmailNotification(emailSender);
       return true;
     }
@@ -205,49 +157,27 @@ public class Monitor {
     return false;
   }
   
+  private String getContent(String url) throws InterruptedException {
+    WebDriver webDriver = new ChromeDriver(chromeOptions);
+    webDriver.get(url);
+    
+    try {
+      // Wait for page to fully load
+      Thread.sleep(10000);
+      
+      return webDriver.findElement(By.tagName("body")).getText();
+    } catch (InterruptedException e) {
+      e.printStackTrace();  
+      throw e;
+    } finally {
+      webDriver.quit();
+    }
+  }
+  
   private void sendEmailNotification(EmailSender emailSender) throws MessagingException {
-    String subject = "There has been an update to an API resource you are monitoring.";
-    String content = "There has been a change to the resource at " + url + ".";        
+    String subject = "A web page that you are monitoring has been updated";
+    String content = "There has been a change at " + url + ".";        
     
     emailSender.sendEmail(email, subject, content);
-  }
-  
-  private String getContent(InputStream inputStream) throws IOException {
-    int length = 0;
-    byte[] buffer = new byte[1024];
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    
-    while ((length = inputStream.read(buffer)) != -1) {
-      byteArrayOutputStream.write(buffer, 0, length);
-    }
-    
-    return byteArrayOutputStream.toString();
-  }
-  
-  /**
-   * First, checks for matching status codes. Next, matching content lengths. Then, matching content  
-   * 
-   * @return true, if a change has been detected; false, otherwise 
-   */
-  public boolean urlResponseHasChanged(int newStatusCode, long newContentLength, String newContent) {    
-    if (newStatusCode != lastStatusCode) {
-      lastStatusCode = newStatusCode;
-      lastContentLength = newContentLength;
-      lastContent = newContent;
-      return true;
-    }
-  
-    if (newContentLength != lastContentLength) {
-      lastContentLength = newContentLength;
-      lastContent = newContent;
-      return true;
-    }
-    
-    if (!newContent.equals(lastContent)) {
-      lastContent = newContent;
-      return true;
-    }
-    
-    return false;    
   }
 }

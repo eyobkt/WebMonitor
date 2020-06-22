@@ -120,40 +120,6 @@ public class MonitorServiceTest {
   } 
   
   @Test
-  public void doPost_failedRequestToUrl_respondsWith400() throws ServletException
-      , SQLException, IOException {     
-    
-    when(request.getParameter("url")).thenReturn("http://nonexistentwebsiteqmggtrbfcfyh.com");
-    when(request.getParameter("email")).thenReturn("email@example.com");    
-    
-    monitorService.doPost(request, response);
-    
-    verify(response, times(1)).setStatus(400);
-    verify(response, times(1)).setStatus(anyInt());    
-    verify(response, times(1)).setContentType("text/plain");
-    verify(response, times(1)).setContentType(anyString());
-    verify(printWriter, times(1)).write("Request to provided URL failed");   
-    verify(printWriter, times(1)).write(anyString());
-  } 
-  
-  @Test
-  public void doPost_urlResponseTypeNotJson_respondsWith400() throws ServletException
-      , SQLException, IOException {      
-    
-    when(request.getParameter("url")).thenReturn("https://github.com");
-    when(request.getParameter("email")).thenReturn("email@example.com");    
-    
-    monitorService.doPost(request, response);
-    
-    verify(response, times(1)).setStatus(400);
-    verify(response, times(1)).setStatus(anyInt());    
-    verify(response, times(1)).setContentType("text/plain");
-    verify(response, times(1)).setContentType(anyString());
-    verify(printWriter, times(1)).write("MIME type of response from provided URL not application/json");   
-    verify(printWriter, times(1)).write(anyString());
-  } 
-  
-  @Test
   public void doPost_duplicateRequest_respondsWith409() throws ServletException
       , SQLException, IOException {      
     

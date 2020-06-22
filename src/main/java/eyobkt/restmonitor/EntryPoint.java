@@ -31,7 +31,7 @@ public class EntryPoint implements ServletContextListener {
    * can be injected
    */
   public void contextInitialized(ServletContextEvent servletContextEvent) {
-    ServletContext servletContext = servletContextEvent.getServletContext();     
+    ServletContext servletContext = servletContextEvent.getServletContext();   
     
     DataSource dataSource = createDataSource(servletContext);
     MonitorDaoFactory monitorDaoFactory = new MonitorDaoFactory(dataSource);     
@@ -64,7 +64,7 @@ public class EntryPoint implements ServletContextListener {
   }
   
   /**
-   * Creates a TaskScheduler that runs a CheckingTask once every 60 minutes
+   * Creates a TaskScheduler that runs a CheckingTask once every 59 minutes
    */
   private void scheduleCheckingTasks(ServletContext servletContext
       , MonitorDaoFactory monitorDaoFactory) throws UnsupportedEncodingException {
@@ -73,7 +73,7 @@ public class EntryPoint implements ServletContextListener {
     EmailSenderFactory emailSenderFactory = new EmailSenderFactory(emailSession, "REST Monitor");    
     CheckingTask checkingTask = new CheckingTask(monitorDaoFactory, emailSenderFactory);
     
-    taskScheduler = new TaskScheduler(checkingTask, 60); 
+    taskScheduler = new TaskScheduler(checkingTask, 59); 
   }  
   
   /**
@@ -96,10 +96,7 @@ public class EntryPoint implements ServletContextListener {
       }
     });
   }  
-  
-  /**
-   * Shuts down the TaskScheduler 
-   */
+
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
     taskScheduler.shutdownNow();
   }

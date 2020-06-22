@@ -1,10 +1,10 @@
 package eyobkt.restmonitor;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import javax.mail.MessagingException;
 
@@ -12,8 +12,8 @@ import eyobkt.restmonitor.emailsender.EmailSender;
 import eyobkt.restmonitor.emailsender.EmailSenderFactory;
 
 /**
- * When an instance of this class is executed by a thread, the checkUrlResponseForChanges method 
- * of each Monitor is called once. Changes are stored in the Monitor data store  
+ * When an instance of this class is executed by a thread, the checkPageForChanges method of 
+ * each Monitor is called once. Changes are stored in the Monitor data store  
  */
 public class CheckingTask implements Runnable { 
   
@@ -31,7 +31,14 @@ public class CheckingTask implements Runnable {
     this.emailSenderFactory = emailSenderFactory;    
   }
   
-  public void run() {                    
+  public void run() {      
+    Random random = new Random();
+    try {
+      Thread.sleep(random.nextInt(120001));
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    
     try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {      
       List<Monitor> monitors = monitorDao.selectAllMonitors();
       Iterator<Monitor> monitorsIterator = monitors.iterator();
@@ -42,10 +49,10 @@ public class CheckingTask implements Runnable {
         Monitor monitor = monitorsIterator.next();          
         
         try {
-          if (monitor.checkUrlResponseForChanges(emailSender)) {
+          if (monitor.checkPageForChanges(emailSender)) {
             monitorDao.updateMonitor(monitor);
           }
-        } catch (IOException | SQLException | MessagingException e) {
+        } catch (SQLException | MessagingException | InterruptedException e) {
           e.printStackTrace();
         }
       }

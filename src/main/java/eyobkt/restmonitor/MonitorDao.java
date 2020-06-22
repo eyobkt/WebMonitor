@@ -25,16 +25,14 @@ public class MonitorDao implements AutoCloseable {
     
   public void insertMonitor(Monitor monitor) throws SQLException {
     String sql = "INSERT INTO monitor "  
-               + "VALUES(?, ?, ?, ?, ?)";
+               + "VALUES(?, ?, 0, 0, ?)";
     PreparedStatement preparedStatement = null;
     
     try {      
       preparedStatement = connection.prepareStatement(sql);
-      preparedStatement.setString(1, monitor.getUrl().toString());
+      preparedStatement.setString(1, monitor.getUrl());
       preparedStatement.setString(2, monitor.getEmail());
-      preparedStatement.setInt(3, monitor.getLastStatusCode());
-      preparedStatement.setLong(4, monitor.getLastContentLength());
-      preparedStatement.setString(5, monitor.getLastContent());
+      preparedStatement.setString(3, monitor.getLastContent());
       
       preparedStatement.executeUpdate(); 
     } catch (SQLException e) {
@@ -94,11 +92,9 @@ public class MonitorDao implements AutoCloseable {
       while(resultSet.next()) {
         String url = resultSet.getString("url");
         String email = resultSet.getString("email");
-        int lastStatusCode = resultSet.getInt("last_status_code");
-        long lastContentLength = resultSet.getLong("last_content_length");
         String lastContent = resultSet.getString("last_content");
         
-        monitors.add(new Monitor(url, email, lastStatusCode, lastContentLength, lastContent));
+        monitors.add(new Monitor(url, email, lastContent));
       }         
       
       return monitors;
@@ -125,17 +121,15 @@ public class MonitorDao implements AutoCloseable {
   
   public void updateMonitor(Monitor monitor) throws SQLException {
     String sql = "UPDATE monitor "
-               + "SET last_status_code = ?, last_content_length = ?, last_content = ? "
+               + "SET last_content = ? "
                + "WHERE url = ? AND email = ?";
     PreparedStatement preparedStatement = null;
     
     try {      
       preparedStatement = connection.prepareStatement(sql);
-      preparedStatement.setInt(1, monitor.getLastStatusCode());
-      preparedStatement.setLong(2, monitor.getLastContentLength());
-      preparedStatement.setString(3, monitor.getLastContent());
-      preparedStatement.setString(4, monitor.getUrl().toString());
-      preparedStatement.setString(5, monitor.getEmail());    
+      preparedStatement.setString(1, monitor.getLastContent());
+      preparedStatement.setString(2, monitor.getUrl());
+      preparedStatement.setString(3, monitor.getEmail());    
       
       preparedStatement.executeUpdate();    
     } catch (SQLException e) {
