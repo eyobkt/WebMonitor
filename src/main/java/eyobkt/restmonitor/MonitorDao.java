@@ -25,7 +25,7 @@ public class MonitorDao implements AutoCloseable {
     
   public void insertMonitor(Monitor monitor) throws SQLException {
     String sql = "INSERT INTO monitor "  
-               + "VALUES(?, ?, 0, 0, ?)";
+               + "VALUES(?, ?, ?)";
     PreparedStatement preparedStatement = null;
     
     try {      
