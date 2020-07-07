@@ -33,18 +33,20 @@ public class MonitorService extends HttpServlet {
       throws ServletException {
     
     String url = request.getParameter("url");
-    String email = request.getParameter("email");    
-    
+    String email = request.getParameter("email");       
     Monitor monitor = null;
     
     try {
       monitor = new Monitor(url, email);
     } catch (IllegalArgumentException e) {
       setResponse(response, 400, e.getMessage());
+      
       return;  
     } catch (InterruptedException e) {
       response.setStatus(500);
+      
       e.printStackTrace();
+      
       return;
     }
 
@@ -55,6 +57,7 @@ public class MonitorService extends HttpServlet {
         setResponse(response, 409, "Resource already exists");      
       } else {
         response.setStatus(500);
+        
         e.printStackTrace();
       }           
       
@@ -76,11 +79,13 @@ public class MonitorService extends HttpServlet {
     
     if (url == null) {
       setResponse(response, 400, "No URL provided");
+      
       return;  
     }
     
     if (email == null) {
       setResponse(response, 400, "No email provided");
+      
       return;  
     }
     
@@ -89,11 +94,14 @@ public class MonitorService extends HttpServlet {
       
       if (numRowsDeleted == 0) {
         response.setStatus(404);
+        
         return;
       }      
     } catch (SQLException e) {      
       response.setStatus(500);
+      
       e.printStackTrace();
+      
       return;
     } 
     
@@ -109,6 +117,7 @@ public class MonitorService extends HttpServlet {
       httpServletResponse.getWriter().write(body);
     } catch (IOException e) {
       e.printStackTrace();
+      
       return;
     }  
     

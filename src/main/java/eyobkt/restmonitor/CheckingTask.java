@@ -39,7 +39,7 @@ public class CheckingTask implements Runnable {
       e.printStackTrace();
     }
     
-    try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {      
+    try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {
       List<Monitor> monitors = monitorDao.selectAllMonitors();
       Iterator<Monitor> monitorsIterator = monitors.iterator();
       

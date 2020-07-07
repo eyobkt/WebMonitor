@@ -38,6 +38,7 @@ public class Monitor {
   
   static {
     WebDriverManager.chromedriver().setup();
+    
     chromeOptions.addArguments("--window-size=1920,1080");  
   }  
   
@@ -63,6 +64,7 @@ public class Monitor {
       this.lastContent = getContent(url);
     } catch (InterruptedException e) {
       e.printStackTrace();
+      
       throw e;
     }    
   }
@@ -150,7 +152,9 @@ public class Monitor {
     
     if (!newContent.equals(lastContent)) {
       lastContent = newContent;
+      
       sendEmailNotification(emailSender);
+      
       return true;
     }
     
@@ -159,6 +163,7 @@ public class Monitor {
   
   private String getContent(String url) throws InterruptedException {
     WebDriver webDriver = new ChromeDriver(chromeOptions);
+    
     webDriver.get(url);
     
     try {
@@ -167,7 +172,8 @@ public class Monitor {
       
       return webDriver.findElement(By.tagName("body")).getText();
     } catch (InterruptedException e) {
-      e.printStackTrace();  
+      e.printStackTrace();
+      
       throw e;
     } finally {
       webDriver.quit();
