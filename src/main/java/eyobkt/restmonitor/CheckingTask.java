@@ -3,7 +3,6 @@ package eyobkt.restmonitor;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
 import javax.mail.MessagingException;
@@ -40,9 +39,7 @@ public class CheckingTask implements Runnable {
     }
     
     try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {
-      List<Monitor> monitors = monitorDao.selectAllMonitors();
-      Iterator<Monitor> monitorsIterator = monitors.iterator();
-      
+      Iterator<Monitor> monitorsIterator = monitorDao.selectAllMonitors().iterator();      
       EmailSender emailSender = emailSenderFactory.createEmailSender();      
       
       while (monitorsIterator.hasNext()) {
