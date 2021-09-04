@@ -1,4 +1,4 @@
-package eyobkt.restmonitor;
+package eyobkt.webmonitor.exception;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 

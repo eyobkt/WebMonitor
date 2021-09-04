@@ -1,4 +1,4 @@
-package eyobkt.restmonitor;
+package eyobkt.webmonitor;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -19,37 +19,31 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import eyobkt.restmonitor.Monitor;
-import eyobkt.restmonitor.MonitorDao;
-import eyobkt.restmonitor.MonitorDaoFactory;
-import eyobkt.restmonitor.MonitorService;
-import eyobkt.restmonitor.PrimaryKeyConstraintViolationException;
+import eyobkt.webmonitor.exception.PrimaryKeyConstraintViolationException;
+import eyobkt.webmonitor.monitor.Monitor;
+import eyobkt.webmonitor.monitor.MonitorController;
+import eyobkt.webmonitor.monitor.MonitorDao;
+import eyobkt.webmonitor.monitor.MonitorDaoFactory;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MonitorServiceTest {
-  
+public class MonitorServiceTest {  
   @Mock
-  private MonitorDao monitorDao;
-  
+  private MonitorDao monitorDao;  
   @Mock
-  private MonitorDaoFactory monitorDaoFactory;
-  
+  private MonitorDaoFactory monitorDaoFactory;  
   @Mock
-  private HttpServletRequest request;
-  
+  private HttpServletRequest request;  
   @Mock
-  private HttpServletResponse response;
-  
+  private HttpServletResponse response;  
   @Mock
-  private PrintWriter printWriter;
-  
+  private PrintWriter printWriter;  
   @InjectMocks
-  private MonitorService monitorService;
+  private MonitorController monitorService;
   
   @Before
   public void setUp() throws SQLException, IOException {
     when(response.getWriter()).thenReturn(printWriter);
-    when(monitorDaoFactory.createMonitorDao()).thenReturn(monitorDao);    
+    when(monitorDaoFactory.create()).thenReturn(monitorDao);    
   }  
   
   @Test

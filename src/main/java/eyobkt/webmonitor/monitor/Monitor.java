@@ -1,6 +1,4 @@
-package eyobkt.restmonitor;
-
-import eyobkt.restmonitor.emailsender.EmailSender;
+package eyobkt.webmonitor.monitor;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
@@ -16,6 +14,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import eyobkt.webmonitor.checkingtask.EmailSender;
 
 public class Monitor {
   
@@ -169,7 +169,6 @@ public class Monitor {
     try {
       // Wait for page to fully load
       Thread.sleep(10000);
-      
       return webDriver.findElement(By.tagName("body")).getText();
     } catch (InterruptedException e) {
       e.printStackTrace();

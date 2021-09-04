@@ -1,4 +1,4 @@
-package eyobkt.restmonitor.emailsender;
+package eyobkt.webmonitor.checkingtask;
 
 import java.io.UnsupportedEncodingException;
 
@@ -7,27 +7,32 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
 public class EmailSenderFactory {
   
-  private Session emailSession;
+  private Session session;
   private InternetAddress fromAddress;
   
   /**
    * @param displayName the name the recipient of an email will see alongside the sender address
    */
-  public EmailSenderFactory(Session emailSession, String displayName) 
+  @Autowired
+  public EmailSenderFactory(Session session, String displayName) 
       throws UnsupportedEncodingException {
     
-    if (emailSession == null || displayName == null) {
+    if (session == null || displayName == null) {
       throw new IllegalArgumentException();   
     }
     
-    this.emailSession = emailSession;
-    fromAddress = new InternetAddress(emailSession.getProperty("mail.smtp.user"), displayName);
+    this.session = session;
+    fromAddress = new InternetAddress(session.getProperty("mail.smtp.user"), displayName);
   }
   
-  public EmailSender createEmailSender() throws MessagingException {
-    MimeMessage mimeMessage = new MimeMessage(emailSession);
+  public EmailSender create() throws MessagingException {
+    MimeMessage mimeMessage = new MimeMessage(session);
     mimeMessage.setFrom(fromAddress);
     
     return new EmailSender(mimeMessage);    

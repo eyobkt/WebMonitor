@@ -1,4 +1,4 @@
-package eyobkt.restmonitor.emailsender;
+package eyobkt.webmonitor.checkingtask;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;

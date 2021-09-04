@@ -1,4 +1,4 @@
-package eyobkt.restmonitor;
+package eyobkt.webmonitor.monitor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import eyobkt.webmonitor.exception.PrimaryKeyConstraintViolationException;
 
 /**
  * MySQL implementation of a Data Access Object for Monitors

@@ -1,4 +1,4 @@
-package eyobkt.restmonitor;
+package eyobkt.webmonitor.monitor;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -8,16 +8,23 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import eyobkt.webmonitor.exception.PrimaryKeyConstraintViolationException;
+
 /**
  * Handles all web service requests
  */
-public class MonitorService extends HttpServlet {  
+
+public class MonitorController extends HttpServlet {  
   
   private static final long serialVersionUID = 1L;
   
   private MonitorDaoFactory monitorDaoFactory;
   
-  public MonitorService(MonitorDaoFactory monitorDaoFactory) {
+  @Autowired
+  public MonitorController(MonitorDaoFactory monitorDaoFactory) {
     if (monitorDaoFactory == null) {
       throw new IllegalArgumentException();      
     }
@@ -50,7 +57,7 @@ public class MonitorService extends HttpServlet {
       return;
     }
 
-    try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {      
+    try (MonitorDao monitorDao = monitorDaoFactory.create()) {      
       monitorDao.insertMonitor(monitor);
     } catch (SQLException e) {      
       if (e instanceof PrimaryKeyConstraintViolationException) {
@@ -89,7 +96,7 @@ public class MonitorService extends HttpServlet {
       return;  
     }
     
-    try (MonitorDao monitorDao = monitorDaoFactory.createMonitorDao()) {    
+    try (MonitorDao monitorDao = monitorDaoFactory.create()) {    
       int numRowsDeleted = monitorDao.deleteMonitor(url, email);     
       
       if (numRowsDeleted == 0) {
