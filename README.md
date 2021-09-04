@@ -1,6 +1,6 @@
-# REST Monitor
+# WebMonitor
 
-REST Monitor is a RESTful web service that enables users to track when a web page has changed.
+WebMonitor is a RESTful web service that allows users to track when a web page has changed.
 
 ## How It Works
 Users make a `POST` request with a URL and their email to `http://ec2-3-16-44-62.us-east-2.compute.amazonaws.com/api/v1/monitor`. 
